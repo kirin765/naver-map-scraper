@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS places (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  source_place_id text NOT NULL UNIQUE,
+  name text NOT NULL,
+  primary_category text NULL,
+  category_path text[] NULL,
+  road_address text NULL,
+  jibun_address text NULL,
+  phone text NULL,
+  business_hours_text text NULL,
+  rating_avg numeric(3,2) NULL CHECK (rating_avg >= 0 AND rating_avg <= 5),
+  review_count_total integer NULL CHECK (review_count_total >= 0),
+  photo_urls text[] NOT NULL DEFAULT '{}'::text[],
+  lat numeric(10,7) NULL CHECK (lat >= -90 AND lat <= 90),
+  lng numeric(10,7) NULL CHECK (lng >= -180 AND lng <= 180),
+  place_url text NOT NULL,
+  raw_list_payload jsonb NULL,
+  first_seen_at timestamptz NOT NULL,
+  last_seen_at timestamptz NOT NULL,
+  last_crawled_at timestamptz NOT NULL
+);
