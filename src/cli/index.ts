@@ -84,8 +84,8 @@ function buildCategoryHarvestInput(flags: ParsedFlags): {
   sampleCount: number;
   maxResults: number;
 } {
-  const sampleCount = readInt(flags, "--sample-count", 12);
-  const maxResults = readInt(flags, "--max-results", 8);
+  const sampleCount = readInt(flags, "--sample-count", 24);
+  const maxResults = readInt(flags, "--max-results", 12);
 
   if (sampleCount <= 0) {
     throw new Error("--sample-count must be greater than 0");
@@ -109,7 +109,7 @@ function buildCategoryHarvestLoopInput(flags: ParsedFlags): {
   intervalSeconds: number;
   maxIdleRuns: number;
 } {
-  const intervalSeconds = readInt(flags, "--interval-seconds", 3_600);
+  const intervalSeconds = readInt(flags, "--interval-seconds", 1_800);
   const maxIdleRuns = readInt(flags, "--max-idle-runs", 2);
   const base = buildCategoryHarvestInput(flags);
 
