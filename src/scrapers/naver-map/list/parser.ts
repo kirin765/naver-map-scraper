@@ -21,17 +21,11 @@ function normalizeWhitespace(value: string): string {
 
 async function firstText(root: Locator, selectors: string[]): Promise<string | undefined> {
   for (const selector of selectors) {
-    const locator = root.locator(selector).first();
-    if ((await locator.count()) === 0) {
-      continue;
-    }
-
-    const text = await locator.textContent();
-    if (text) {
+    const text = await root.locator(selector).first().textContent().catch(() => null);
+    if (text?.trim()) {
       return normalizeWhitespace(text);
     }
   }
-
   return undefined;
 }
 
