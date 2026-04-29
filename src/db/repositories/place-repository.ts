@@ -136,37 +136,52 @@ export class PlaceRepository {
     runId: string,
     reviewSamples: ReviewSample[]
   ): Promise<void> {
-    for (const reviewSample of reviewSamples) {
-      await client.query(
-        `
-          INSERT INTO place_review_samples (
-            place_id,
-            run_id,
-            sample_order,
-            rating,
-            review_text,
-            reviewed_at,
-            collected_at
-          )
-          VALUES ($1, $2, $3, $4, $5, $6, $7)
-          ON CONFLICT (place_id, run_id, sample_order)
-          DO UPDATE
-          SET
-            rating = EXCLUDED.rating,
-            review_text = EXCLUDED.review_text,
-            reviewed_at = EXCLUDED.reviewed_at,
-            collected_at = EXCLUDED.collected_at
-        `,
-        [
-          placeId,
-          runId,
-          reviewSample.sampleOrder,
-          reviewSample.rating ?? null,
-          reviewSample.reviewText ?? null,
-          reviewSample.reviewedAt ?? null,
-          reviewSample.collectedAt
-        ]
+    if (reviewSamples.length === 0) {
+      return;
+    }
+
+    const COLS_PER_ROW = 7;
+    const values: unknown[] = [];
+    const valueClauses: string[] = [];
+
+    for (let i = 0; i < reviewSamples.length; i++) {
+      const reviewSample = reviewSamples[i];
+      const base = i * COLS_PER_ROW;
+      valueClauses.push(
+        `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6}, $${base + 7})`
+      );
+      values.push(
+        placeId,
+        runId,
+        reviewSample.sampleOrder,
+        reviewSample.rating ?? null,
+        reviewSample.reviewText ?? null,
+        reviewSample.reviewedAt ?? null,
+        reviewSample.collectedAt
       );
     }
+
+    await client.query(
+      `
+        INSERT INTO place_review_samples (
+          place_id,
+          run_id,
+          sample_order,
+          rating,
+          review_text,
+          reviewed_at,
+          collected_at
+        )
+        VALUES ${valueClauses.join(", ")}
+        ON CONFLICT (place_id, run_id, sample_order)
+        DO UPDATE
+        SET
+          rating = EXCLUDED.rating,
+          review_text = EXCLUDED.review_text,
+          reviewed_at = EXCLUDED.reviewed_at,
+          collected_at = EXCLUDED.collected_at
+      `,
+      values
+    );
   }
 }

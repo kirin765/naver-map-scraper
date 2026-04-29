@@ -19,6 +19,7 @@ export type RunListCrawlResult = {
   targetId: string;
   runId: string;
   resultCount: number;
+  skippedCount: number;
   searchUrl: string;
 };
 
@@ -69,15 +70,30 @@ async function executeListCrawl(
 
     const listItems = await collectListItems(session.searchFrame, target.maxResults, env);
     let savedCount = 0;
+    let skippedCount = 0;
 
     for (const listItem of listItems) {
-      const rawItem = await openAndParsePlaceDetail(session.page, listItem, env.navigationTimeoutMs);
+      const rawItem = await (async () => {
+        let lastError: unknown;
+        for (let attempt = 1; attempt <= 2; attempt++) {
+          try {
+            return await openAndParsePlaceDetail(session.page, listItem, env.navigationTimeoutMs);
+          } catch (err) {
+            lastError = err;
+            if (attempt < 2) {
+              await new Promise((resolve) => setTimeout(resolve, 1000));
+            }
+          }
+        }
+        throw lastError;
+      })();
       if (!rawItem.sourcePlaceId || !rawItem.nameText) {
         logger.warn("Skipping non-place list item", {
           runId: run.id,
           rank: listItem.rank,
           listPosition: listItem.listPosition
         });
+        skippedCount += 1;
         continue;
       }
 
@@ -100,13 +116,15 @@ async function executeListCrawl(
     logger.info("Completed crawl run", {
       runId: run.id,
       targetId: target.id,
-      resultCount: savedCount
+      resultCount: savedCount,
+      skippedCount
     });
 
     return {
       targetId: target.id,
       runId: run.id,
       resultCount: savedCount,
+      skippedCount,
       searchUrl: session.searchUrl
     };
   } catch (error) {
@@ -133,8 +151,7 @@ export async function runListCrawl(
   try {
     return await executeListCrawl(input, { browser, pool, env }, options);
   } finally {
-    await browser.close();
-    await pool.end();
+    await Promise.allSettled([browser.close(), pool.end()]);
   }
 }
 
