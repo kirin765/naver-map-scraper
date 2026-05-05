@@ -40,7 +40,7 @@ npm run crawl -- --keyword "카페" --region "성수동" --max-results 50 --revi
 Harvest category samples from Seoul search queries:
 
 ```bash
-npm run categories -- --region "서울" --sample-count 12 --max-results 8
+npm run categories -- --region "서울" --sample-count 24 --max-results 12
 ```
 
 This command persists category harvests to Postgres via `category_harvest_runs` and `category_terms`.
@@ -48,7 +48,7 @@ This command persists category harvests to Postgres via `category_harvest_runs` 
 Run a periodic category loop that stops after consecutive idle cycles:
 
 ```bash
-npm run categories-loop -- --region "서울" --sample-count 12 --max-results 8 --interval-seconds 3600 --max-idle-runs 2
+npm run categories-loop -- --region "서울" --sample-count 24 --max-results 12 --interval-seconds 1800 --max-idle-runs 2
 ```
 
 Run directly through the CLI entrypoint:
